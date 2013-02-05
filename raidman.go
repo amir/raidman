@@ -1,12 +1,12 @@
 package raidman
 
 import (
-	"./proto"
 	"bytes"
 	pb "code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/amir/raidman/proto"
 	"net"
 	"reflect"
 	"sync"
