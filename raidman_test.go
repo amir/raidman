@@ -13,7 +13,7 @@ func TestTCP(t *testing.T) {
 		State:   "success",
 		Host:    "raidman",
 		Service: "tcp",
-		Int:     42,
+		Metric:  42,
 		Ttl:     1,
 	}
 
@@ -43,7 +43,7 @@ func TestUDP(t *testing.T) {
 		State:   "warning",
 		Host:    "raidman",
 		Service: "udp",
-		Double:  4.2,
+		Metric:  3.4,
 		Ttl:     10.7,
 	}
 

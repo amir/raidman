@@ -35,12 +35,13 @@ type Event struct {
 	State       string
 	Service     string
 	Description string
-	Float       float32
-	Double      float64
-	Int         int64
+	Metric      interface{} // Could be Int, Float32, Float64
 }
 
-// Dial establishes a connection to a Riemann server
+// Dial establishes a connection to a Riemann server at addr, on the network
+// netwrk.
+//
+// Known networks are "tcp", "tcp4", "tcp6", "udp", "udp4", and "udp6".
 func Dial(netwrk, addr string) (c *Client, err error) {
 	c = new(Client)
 
@@ -108,7 +109,7 @@ func (network *udp) Send(message *proto.Msg, conn net.Conn) (*proto.Msg, error) 
 	return nil, nil
 }
 
-func eventToPbEvent(event *Event) *proto.Event {
+func eventToPbEvent(event *Event) (*proto.Event, error) {
 	var e proto.Event
 
 	t := reflect.ValueOf(&e).Elem()
@@ -129,20 +130,26 @@ func eventToPbEvent(event *Event) *proto.Event {
 			case "Time":
 				tmp := reflect.ValueOf(pb.Int64(value.Int()))
 				t.FieldByName(name).Set(tmp)
-			case "Float":
-				tmp := reflect.ValueOf(pb.Float32(float32(value.Float())))
-				t.FieldByName("MetricF").Set(tmp)
-			case "Int":
-				tmp := reflect.ValueOf(pb.Int64(value.Int()))
-				t.FieldByName("MetricSint64").Set(tmp)
-			case "Double":
-				tmp := reflect.ValueOf(pb.Float64(value.Float()))
-				t.FieldByName("MetricD").Set(tmp)
+			case "Metric":
+				switch reflect.TypeOf(f.Interface()).Kind() {
+				case reflect.Int:
+					tmp := reflect.ValueOf(pb.Int64(int64(value.Int())))
+					t.FieldByName("MetricSint64").Set(tmp)
+				case reflect.Float32:
+					tmp := reflect.ValueOf(pb.Float32(float32(value.Float())))
+					t.FieldByName("MetricF").Set(tmp)
+				case reflect.Float64:
+					tmp := reflect.ValueOf(pb.Float64(value.Float()))
+					t.FieldByName("MetricD").Set(tmp)
+				default:
+					return nil, fmt.Errorf("Metric of invalid type (type %v)",
+						reflect.TypeOf(f.Interface()).Kind())
+				}
 			}
 		}
 	}
 
-	return &e
+	return &e, nil
 }
 
 func pbEventsToEvents(pbEvents []*proto.Event) []Event {
@@ -156,24 +163,32 @@ func pbEventsToEvents(pbEvents []*proto.Event) []Event {
 			Description: event.GetDescription(),
 			Ttl:         event.GetTtl(),
 			Time:        event.GetTime(),
-			Float:       event.GetMetricF(),
-			Int:         event.GetMetricSint64(),
-			Double:      event.GetMetricD(),
 		}
+		if event.MetricF != nil {
+			e.Metric = event.GetMetricF()
+		} else if event.MetricD != nil {
+			e.Metric = event.GetMetricD()
+		} else {
+			e.Metric = event.GetMetricSint64()
+		}
+
 		events = append(events, e)
 	}
 
 	return events
 }
 
-// Send sends an event to to Riemann
+// Send sends an event to Riemann
 func (c *Client) Send(event *Event) error {
-	e := eventToPbEvent(event)
+	e, err := eventToPbEvent(event)
+	if err != nil {
+		return err
+	}
 	message := &proto.Msg{}
 	message.Events = append(message.Events, e)
 	c.m.Lock()
 	defer c.m.Unlock()
-	_, err := c.net.Send(message, c.connection)
+	_, err = c.net.Send(message, c.connection)
 	if err != nil {
 		return err
 	}

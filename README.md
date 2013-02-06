@@ -20,7 +20,7 @@ func main() {
                 State:   "success",
                 Host:    "raidman",
                 Service: "raidman-sample",
-                Int:     100,
+                Metric:  100,
                 Ttl:     10,
         }
 
