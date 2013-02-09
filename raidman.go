@@ -119,7 +119,7 @@ func eventToPbEvent(event *Event) (*proto.Event, error) {
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
 		value := reflect.ValueOf(f.Interface())
-		if reflect.Zero(f.Type()) != value {
+		if reflect.Zero(f.Type()) != value && f.Interface() != nil {
 			name := typeOfEvent.Field(i).Name
 			switch name {
 			case "State", "Service", "Host", "Description":
