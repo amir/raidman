@@ -15,6 +15,7 @@ func TestTCP(t *testing.T) {
 		Service: "tcp",
 		Metric:  42,
 		Ttl:     1,
+		Tags:    []string{"tcp", "test", "raidman"},
 	}
 
 	err = c.Send(event)
@@ -22,7 +23,7 @@ func TestTCP(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	events, err := c.Query("host = \"raidman\"")
+	events, err := c.Query("tagged \"test\"")
 	if err != nil {
 		t.Error(err.Error())
 	}

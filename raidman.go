@@ -31,11 +31,12 @@ type Client struct {
 type Event struct {
 	Ttl         float32
 	Time        int64
+	Tags        []string
 	Host        string
 	State       string
 	Service     string
-	Description string
 	Metric      interface{} // Could be Int, Float32, Float64
+	Description string
 }
 
 // Dial establishes a connection to a Riemann server at addr, on the network
@@ -130,6 +131,9 @@ func eventToPbEvent(event *Event) (*proto.Event, error) {
 			case "Time":
 				tmp := reflect.ValueOf(pb.Int64(value.Int()))
 				t.FieldByName(name).Set(tmp)
+			case "Tags":
+				tmp := reflect.ValueOf(value.Interface().([]string))
+				t.FieldByName(name).Set(tmp)
 			case "Metric":
 				switch reflect.TypeOf(f.Interface()).Kind() {
 				case reflect.Int:
@@ -163,6 +167,7 @@ func pbEventsToEvents(pbEvents []*proto.Event) []Event {
 			Description: event.GetDescription(),
 			Ttl:         event.GetTtl(),
 			Time:        event.GetTime(),
+			Tags:        event.GetTags(),
 		}
 		if event.MetricF != nil {
 			e.Metric = event.GetMetricF()
