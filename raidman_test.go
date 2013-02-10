@@ -88,3 +88,47 @@ func BenchmarkUDP(b *testing.B) {
 	}
 	c.Close()
 }
+
+func BenchmarkConcurrentTCP(b *testing.B) {
+	c, err := Dial("tcp", "localhost:5555")
+
+	var event = &Event{
+		Host:    "raidman",
+		Service: "tcp_concurrent",
+		Tags:    []string{"concurrent", "tcp", "benchmark"},
+	}
+
+	ch := make(chan int, b.N)
+	for i := 0; i < b.N; i++ {
+		go func(metric int) {
+			event.Metric = metric
+			err = c.Send(event)
+			ch <- i
+		}(i)
+	}
+	<-ch
+
+	c.Close()
+}
+
+func BenchmarkConcurrentUDP(b *testing.B) {
+	c, err := Dial("udp", "localhost:5555")
+
+	var event = &Event{
+		Host:    "raidman",
+		Service: "udp_concurrent",
+		Tags:    []string{"concurrent", "udp", "benchmark"},
+	}
+
+	ch := make(chan int, b.N)
+	for i := 0; i < b.N; i++ {
+		go func(metric int) {
+			event.Metric = metric
+			err = c.Send(event)
+			ch <- i
+		}(i)
+	}
+	<-ch
+
+	c.Close()
+}
