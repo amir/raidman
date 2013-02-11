@@ -22,7 +22,7 @@ type udp struct{}
 
 // Client represents a connection to a Riemann server
 type Client struct {
-	m          sync.Mutex
+	sync.Mutex
 	net        network
 	connection net.Conn
 }
@@ -191,8 +191,8 @@ func (c *Client) Send(event *Event) error {
 	}
 	message := &proto.Msg{}
 	message.Events = append(message.Events, e)
-	c.m.Lock()
-	defer c.m.Unlock()
+	c.Lock()
+	defer c.Unlock()
 	_, err = c.net.Send(message, c.connection)
 	if err != nil {
 		return err
@@ -211,8 +211,8 @@ func (c *Client) Query(q string) ([]Event, error) {
 	query.String_ = pb.String(q)
 	message := &proto.Msg{}
 	message.Query = query
-	c.m.Lock()
-	defer c.m.Unlock()
+	c.Lock()
+	defer c.Unlock()
 	response, err := c.net.Send(message, c.connection)
 	if err != nil {
 		return nil, err
@@ -222,7 +222,7 @@ func (c *Client) Query(q string) ([]Event, error) {
 
 // Close closes the connection to Riemann
 func (c *Client) Close() {
-	c.m.Lock()
+	c.Lock()
 	c.connection.Close()
-	c.m.Unlock()
+	c.Unlock()
 }
