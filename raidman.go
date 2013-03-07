@@ -2,15 +2,16 @@ package raidman
 
 import (
 	"bytes"
-	pb "code.google.com/p/goprotobuf/proto"
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"github.com/amir/raidman/proto"
 	"net"
 	"os"
 	"reflect"
 	"sync"
+
+	pb "code.google.com/p/goprotobuf/proto"
+	"github.com/amir/raidman/proto"
 )
 
 type network interface {
