@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/amir/raidman/proto"
 	"net"
+	"os"
 	"reflect"
 	"sync"
 )
@@ -32,7 +33,7 @@ type Event struct {
 	Ttl         float32
 	Time        int64
 	Tags        []string
-	Host        string
+	Host        string // Defaults to os.Hostname()
 	State       string
 	Service     string
 	Metric      interface{} // Could be Int, Float32, Float64
@@ -113,6 +114,9 @@ func (network *udp) Send(message *proto.Msg, conn net.Conn) (*proto.Msg, error) 
 func eventToPbEvent(event *Event) (*proto.Event, error) {
 	var e proto.Event
 
+	if event.Host == "" {
+		event.Host, _ = os.Hostname()
+	}
 	t := reflect.ValueOf(&e).Elem()
 	s := reflect.ValueOf(event).Elem()
 	typeOfEvent := s.Type()

@@ -55,6 +55,40 @@ func TestUDP(t *testing.T) {
 	c.Close()
 }
 
+func TestTCPWithoutHost(t *testing.T) {
+	c, err := Dial("tcp", "localhost:5555")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	defer c.Close()
+
+	var event = &Event{
+		State:   "success",
+		Service: "tcp-host-not-set",
+		Ttl:     5,
+	}
+
+	err = c.Send(event)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	events, err := c.Query("service = \"tcp-host-not-set\"")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if len(events) < 1 {
+		t.Error("Submitted event not found")
+	}
+
+	for _, e := range events {
+		if e.Host == "" {
+			t.Error("Default host name is not set")
+		}
+	}
+}
+
 func BenchmarkTCP(b *testing.B) {
 	c, err := Dial("tcp", "localhost:5555")
 
