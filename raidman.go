@@ -1,3 +1,4 @@
+// Go Riemann client
 package raidman
 
 import (
