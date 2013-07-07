@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"reflect"
@@ -89,7 +90,7 @@ func (network *tcp) Send(message *proto.Msg, conn net.Conn) (*proto.Msg, error) 
 		return msg, err
 	}
 	response := make([]byte, header)
-	if _, err = conn.Read(response); err != nil {
+	if err = readFully(conn, response); err != nil {
 		return msg, err
 	}
 	if err = pb.Unmarshal(response, msg); err != nil {
@@ -99,6 +100,17 @@ func (network *tcp) Send(message *proto.Msg, conn net.Conn) (*proto.Msg, error) 
 		return msg, errors.New(msg.GetError())
 	}
 	return msg, nil
+}
+
+func readFully(r io.Reader, p []byte) error {
+	for len(p) > 0 {
+		n, err := r.Read(p)
+		p = p[n:]
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (network *udp) Send(message *proto.Msg, conn net.Conn) (*proto.Msg, error) {
