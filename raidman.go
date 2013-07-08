@@ -13,7 +13,7 @@ import (
 	"sync"
 
 	pb "code.google.com/p/goprotobuf/proto"
-	"github.com/amir/raidman/proto"
+	"github.com/swdunlop/raidman/proto"
 )
 
 type network interface {
