@@ -10,12 +10,13 @@ func TestTCP(t *testing.T) {
 		t.Fatal(err.Error())
 	}
 	var event = &Event{
-		State:   "success",
-		Host:    "raidman",
-		Service: "tcp",
-		Metric:  42,
-		Ttl:     1,
-		Tags:    []string{"tcp", "test", "raidman"},
+		State:      "success",
+		Host:       "raidman",
+		Service:    "tcp",
+		Metric:     42,
+		Ttl:        1,
+		Tags:       []string{"tcp", "test", "raidman"},
+		Attributes: map[string]string{"type": "test"},
 	}
 
 	err = c.Send(event)
@@ -30,6 +31,17 @@ func TestTCP(t *testing.T) {
 
 	if len(events) < 1 {
 		t.Error("Submitted event not found")
+	}
+
+	testAttributeExists := false
+	for _, event := range events {
+		if val, ok := event.Attributes["type"]; ok && val == "test" {
+			testAttributeExists = true
+		}
+	}
+
+	if !testAttributeExists {
+		t.Error("Attribute \"type\" is missing")
 	}
 
 	c.Close()
