@@ -41,6 +41,7 @@ type Event struct {
 	Service     string
 	Metric      interface{} // Could be Int, Float32, Float64
 	Description string
+	Attributes  map[string]string
 }
 
 // Dial establishes a connection to a Riemann server at addr, on the network
@@ -167,6 +168,19 @@ func eventToPbEvent(event *Event) (*proto.Event, error) {
 					return nil, fmt.Errorf("Metric of invalid type (type %v)",
 						reflect.TypeOf(f.Interface()).Kind())
 				}
+			case "Attributes":
+				var attrs []*proto.Attribute
+				for k, v := range value.Interface().(map[string]string) {
+					// Copy k,v so we can take
+					// pointers to the new
+					// temporaries
+					k_, v_ := k, v
+					attrs = append(attrs, &proto.Attribute{
+						Key:   &k_,
+						Value: &v_,
+					})
+				}
+				t.FieldByName(name).Set(reflect.ValueOf(attrs))
 			}
 		}
 	}
@@ -193,6 +207,12 @@ func pbEventsToEvents(pbEvents []*proto.Event) []Event {
 			e.Metric = event.GetMetricD()
 		} else {
 			e.Metric = event.GetMetricSint64()
+		}
+		if event.Attributes != nil {
+			e.Attributes = make(map[string]string, len(event.GetAttributes()))
+			for _, attr := range event.GetAttributes() {
+				e.Attributes[attr.GetKey()] = attr.GetValue()
+			}
 		}
 
 		events = append(events, e)
