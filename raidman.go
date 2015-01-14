@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"sync"
 
-	pb "code.google.com/p/goprotobuf/proto"
+	pb "github.com/golang/protobuf/proto"
 	"github.com/amir/raidman/proto"
 )
 
