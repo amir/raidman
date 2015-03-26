@@ -11,6 +11,7 @@ import (
 	"os"
 	"reflect"
 	"sync"
+	"time"
 
 	pb "github.com/golang/protobuf/proto"
 	"github.com/amir/raidman/proto"
@@ -29,6 +30,7 @@ type Client struct {
 	sync.Mutex
 	net        network
 	connection net.Conn
+	timeout	   time.Duration
 }
 
 // An Event represents a single Riemann event
@@ -45,10 +47,10 @@ type Event struct {
 }
 
 // Dial establishes a connection to a Riemann server at addr, on the network
-// netwrk.
+// netwrk, with a timeout of timeout
 //
 // Known networks are "tcp", "tcp4", "tcp6", "udp", "udp4", and "udp6".
-func Dial(netwrk, addr string) (c *Client, err error) {
+func DialWithTimeout(netwrk, addr string, timeout time.Duration) (c *Client, err error) {
 	c = new(Client)
 
 	var cnet network
@@ -62,12 +64,21 @@ func Dial(netwrk, addr string) (c *Client, err error) {
 	}
 
 	c.net = cnet
+	c.timeout = timeout
 	c.connection, err = net.Dial(netwrk, addr)
 	if err != nil {
 		return nil, err
 	}
 
 	return c, nil
+}
+
+// Dial establishes a connection to a Riemann server at addr, on the network
+// netwrk.
+//
+// Known networks are "tcp", "tcp4", "tcp6", "udp", "udp4", and "udp6".
+func Dial(netwrk, addr string) (c *Client, err error) {
+	return DialWithTimeout(netwrk, addr, 0)
 }
 
 func (network *tcp) Send(message *proto.Msg, conn net.Conn) (*proto.Msg, error) {
@@ -231,6 +242,14 @@ func (c *Client) Send(event *Event) error {
 	message.Events = append(message.Events, e)
 	c.Lock()
 	defer c.Unlock()
+	
+	if c.timeout > 0 {
+		err = c.connection.SetDeadline(time.Now().Add(c.timeout))
+		if err != nil {
+			return err
+		}
+	}
+	
 	_, err = c.net.Send(message, c.connection)
 	if err != nil {
 		return err
