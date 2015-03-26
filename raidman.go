@@ -13,8 +13,8 @@ import (
 	"sync"
 	"time"
 
-	pb "github.com/golang/protobuf/proto"
 	"github.com/amir/raidman/proto"
+	pb "github.com/golang/protobuf/proto"
 )
 
 type network interface {
@@ -30,7 +30,7 @@ type Client struct {
 	sync.Mutex
 	net        network
 	connection net.Conn
-	timeout	   time.Duration
+	timeout    time.Duration
 }
 
 // An Event represents a single Riemann event
@@ -242,14 +242,14 @@ func (c *Client) Send(event *Event) error {
 	message.Events = append(message.Events, e)
 	c.Lock()
 	defer c.Unlock()
-	
+
 	if c.timeout > 0 {
 		err = c.connection.SetDeadline(time.Now().Add(c.timeout))
 		if err != nil {
 			return err
 		}
 	}
-	
+
 	_, err = c.net.Send(message, c.connection)
 	if err != nil {
 		return err
