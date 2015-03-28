@@ -1,6 +1,7 @@
 package raidman
 
 import (
+	"reflect"
 	"testing"
 )
 
@@ -97,6 +98,27 @@ func TestTCPWithoutHost(t *testing.T) {
 	for _, e := range events {
 		if e.Host == "" {
 			t.Error("Default host name is not set")
+		}
+	}
+}
+
+func TestIsZero(t *testing.T) {
+	event := &Event{
+		Time: 1,
+	}
+	elem := reflect.ValueOf(event).Elem()
+	eventType := elem.Type()
+	for i := 0; i < elem.NumField(); i++ {
+		field := elem.Field(i)
+		name := eventType.Field(i).Name
+		if name == "Time" {
+			if isZero(field) {
+				t.Error("Time should not be zero")
+			}
+		} else {
+			if !isZero(field) {
+				t.Errorf("%s should be zero", name)
+			}
 		}
 	}
 }

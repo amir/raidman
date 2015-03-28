@@ -137,6 +137,21 @@ func (network *udp) Send(message *proto.Msg, conn net.Conn) (*proto.Msg, error) 
 	return nil, nil
 }
 
+func isZero(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Map:
+		return v.IsNil()
+	case reflect.Slice:
+		zero := true
+		for i := 0; i < v.Len(); i++ {
+			zero = zero && isZero(v.Index(i))
+		}
+		return zero
+	}
+	zero := reflect.Zero(v.Type())
+	return v.Interface() == zero.Interface()
+}
+
 func eventToPbEvent(event *Event) (*proto.Event, error) {
 	var e proto.Event
 
@@ -149,7 +164,7 @@ func eventToPbEvent(event *Event) (*proto.Event, error) {
 	for i := 0; i < s.NumField(); i++ {
 		f := s.Field(i)
 		value := reflect.ValueOf(f.Interface())
-		if reflect.Zero(f.Type()) != value && f.Interface() != nil {
+		if !isZero(f) {
 			name := typeOfEvent.Field(i).Name
 			switch name {
 			case "State", "Service", "Host", "Description":
