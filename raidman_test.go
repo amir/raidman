@@ -158,7 +158,7 @@ func BenchmarkUDP(b *testing.B) {
 }
 
 func BenchmarkConcurrentTCP(b *testing.B) {
-	c, err := Dial("tcp", "localhost:5555")
+	c, _ := Dial("tcp", "localhost:5555")
 
 	var event = &Event{
 		Host:    "raidman",
@@ -180,7 +180,7 @@ func BenchmarkConcurrentTCP(b *testing.B) {
 }
 
 func BenchmarkConcurrentUDP(b *testing.B) {
-	c, err := Dial("udp", "localhost:5555")
+	c, _ := Dial("udp", "localhost:5555")
 
 	var event = &Event{
 		Host:    "raidman",
