@@ -24,7 +24,36 @@ func main() {
                 Ttl:     10,
         }
 
+        // send one event
         err = c.Send(event)
+        if err != nil {
+                panic(err)
+        }
+        
+        // send multiple events at once
+        err = c.SendMulti([]*raidman.Event{
+                &raidman.Event{
+                        State:   "success",
+                        Host:    "raidman",
+                        Service: "raidman-sample",
+                        Metric:  100,
+                        Ttl:     10,
+                },
+                &raidman.Event{
+                        State:   "failure",
+                        Host:    "raidman",
+                        Service: "raidman-sample",
+                        Metric:  100,
+                        Ttl:     10,
+                },
+                &raidman.Event{
+                        State:   "success",
+                        Host:    "raidman",
+                        Service: "raidman-sample",
+                        Metric:  100,
+                        Ttl:     10,
+                },
+        })
         if err != nil {
                 panic(err)
         }

@@ -249,23 +249,33 @@ func pbEventsToEvents(pbEvents []*proto.Event) []Event {
 
 // Send sends an event to Riemann
 func (c *Client) Send(event *Event) error {
-	e, err := eventToPbEvent(event)
-	if err != nil {
-		return err
-	}
+	return c.SendMulti([]*Event{event})
+}
+
+// SendMulti sends multiple events to Riemann
+func (c *Client) SendMulti(events []*Event) error {
 	message := &proto.Msg{}
-	message.Events = append(message.Events, e)
+	
+	for _, event := range events {
+		e, err := eventToPbEvent(event)
+		if err != nil {
+			return err
+		}
+		
+		message.Events = append(message.Events, e)
+	}
+	
 	c.Lock()
 	defer c.Unlock()
 
 	if c.timeout > 0 {
-		err = c.connection.SetDeadline(time.Now().Add(c.timeout))
+		err := c.connection.SetDeadline(time.Now().Add(c.timeout))
 		if err != nil {
 			return err
 		}
 	}
 
-	_, err = c.net.Send(message, c.connection)
+	_, err := c.net.Send(message, c.connection)
 	if err != nil {
 		return err
 	}
