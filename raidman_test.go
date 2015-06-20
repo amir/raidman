@@ -48,6 +48,48 @@ func TestTCP(t *testing.T) {
 	c.Close()
 }
 
+func TestMultiTCP(t *testing.T) {
+	c, err := Dial("tcp", "localhost:5555")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	
+	err = c.SendMulti([]*Event{
+		&Event{
+			State:      "success",
+			Host:       "raidman",
+			Service:    "tcp-multi-1",
+			Metric:     42,
+			Ttl:        1,
+			Tags:       []string{"tcp", "test", "raidman", "multi"},
+			Attributes: map[string]string{"type": "test"},
+		},
+		&Event{
+			State:      "success",
+			Host:       "raidman",
+			Service:    "tcp-multi-2",
+			Metric:     42,
+			Ttl:        1,
+			Tags:       []string{"tcp", "test", "raidman", "multi"},
+			Attributes: map[string]string{"type": "test"},
+		},
+	})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	events, err := c.Query("tagged \"test\" and tagged \"multi\"")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if len(events) != 2 {
+		t.Error("Submitted event not found")
+	}
+
+	c.Close()
+}
+
 func TestUDP(t *testing.T) {
 	c, err := Dial("udp", "localhost:5555")
 	if err != nil {
