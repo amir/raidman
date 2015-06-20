@@ -255,16 +255,16 @@ func (c *Client) Send(event *Event) error {
 // SendMulti sends multiple events to Riemann
 func (c *Client) SendMulti(events []*Event) error {
 	message := &proto.Msg{}
-	
+
 	for _, event := range events {
 		e, err := eventToPbEvent(event)
 		if err != nil {
 			return err
 		}
-		
+
 		message.Events = append(message.Events, e)
 	}
-	
+
 	c.Lock()
 	defer c.Unlock()
 
