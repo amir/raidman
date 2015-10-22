@@ -184,6 +184,9 @@ func eventToPbEvent(event *Event) (*proto.Event, error) {
 				case reflect.Int:
 					tmp := reflect.ValueOf(pb.Int64(int64(value.Int())))
 					t.FieldByName("MetricSint64").Set(tmp)
+				case reflect.Int64:
+					tmp := reflect.ValueOf(pb.Int64(int64(value.Int())))
+					t.FieldByName("MetricSint64").Set(tmp)
 				case reflect.Float32:
 					tmp := reflect.ValueOf(pb.Float32(float32(value.Float())))
 					t.FieldByName("MetricF").Set(tmp)
