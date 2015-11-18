@@ -90,6 +90,30 @@ func TestMultiTCP(t *testing.T) {
 	c.Close()
 }
 
+func TestMetricIsInt64(t *testing.T) {
+	c, err := Dial("tcp", "localhost:5555")
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	var int64metric int64 = 9223372036854775807
+
+	var event = &Event{
+		State:      "success",
+		Host:       "raidman",
+		Service:    "tcp",
+		Metric:     int64metric,
+		Ttl:        1,
+		Tags:       []string{"tcp", "test", "raidman"},
+		Attributes: map[string]string{"type": "test"},
+	}
+
+	err = c.Send(event)
+	if err != nil {
+		t.Error(err.Error())
+	}
+}
+
 func TestUDP(t *testing.T) {
 	c, err := Dial("udp", "localhost:5555")
 	if err != nil {
