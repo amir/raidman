@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/amir/raidman/proto"
+	"github.com/mistsys/raidman/proto"
 	pb "github.com/golang/protobuf/proto"
 )
 
@@ -181,6 +181,9 @@ func eventToPbEvent(event *Event) (*proto.Event, error) {
 				t.FieldByName(name).Set(tmp)
 			case "Metric":
 				switch reflect.TypeOf(f.Interface()).Kind() {
+				case reflect.Uint64:
+					tmp := reflect.ValueOf(pb.Int64(int64(value.Uint())))
+					t.FieldByName("MetricSint64").Set(tmp)
 				case reflect.Int:
 					tmp := reflect.ValueOf(pb.Int64(int64(value.Int())))
 					t.FieldByName("MetricSint64").Set(tmp)
