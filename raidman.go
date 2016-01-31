@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"os"
 	"reflect"
 	"sync"
@@ -15,6 +16,7 @@ import (
 
 	"github.com/amir/raidman/proto"
 	pb "github.com/golang/protobuf/proto"
+	"golang.org/x/net/proxy"
 )
 
 type network interface {
@@ -63,9 +65,31 @@ func DialWithTimeout(netwrk, addr string, timeout time.Duration) (c *Client, err
 		return nil, fmt.Errorf("dial %q: unsupported network %q", netwrk, netwrk)
 	}
 
+	var proxyUrl = os.Getenv("RIEMANN_PROXY")
+
+	// Get a proxy Dialer that will create the connection on our
+	// behalf via the SOCKS5 proxy.  Specify the authentication
+	// and re-create the dialer/transport/client if tor's
+	// IsolateSOCKSAuth is needed.
+	var dialer proxy.Dialer
+	if dialer == nil {
+		dialer = proxy.Direct
+	}
+
+	if proxyUrl != "" {
+		u, err := url.Parse(proxyUrl)
+		if err != nil {
+			fmt.Errorf("Failed to obtain proxy dialer: %v\n", err)
+		}
+		if dialer, err = proxy.FromURL(u, dialer); err != nil {
+			fmt.Errorf("Failed to parse  " + proxyUrl + " as a proxy: " + err.Error())
+			return nil, err
+		}
+	}
+
 	c.net = cnet
 	c.timeout = timeout
-	c.connection, err = net.Dial(netwrk, addr)
+	c.connection, err = dialer.Dial(netwrk, addr)
 	if err != nil {
 		return nil, err
 	}
