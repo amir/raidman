@@ -1,6 +1,8 @@
 package raidman
 
 import (
+	"fmt"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -186,6 +188,22 @@ func TestIsZero(t *testing.T) {
 				t.Errorf("%s should be zero", name)
 			}
 		}
+	}
+}
+
+func TestDialer(t *testing.T) {
+	proxyAddr := "localhost:9999"
+	os.Setenv("RIEMANN_PROXY", "socks5://"+proxyAddr)
+	defer os.Unsetenv("RIEMANN_PROXY")
+	dialer, err := newDialer()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	val := reflect.Indirect(reflect.ValueOf(dialer))
+	// this is a horrible hack but proxy.Dialer exports nothing.
+	addr := fmt.Sprintf("%s", val.FieldByName("addr"))
+	if addr != proxyAddr {
+		t.Errorf("RIEMANN_PROXY is set and is %s but dialer's proxy is %s", proxyAddr, addr)
 	}
 }
 
