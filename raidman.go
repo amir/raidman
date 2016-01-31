@@ -65,26 +65,9 @@ func DialWithTimeout(netwrk, addr string, timeout time.Duration) (c *Client, err
 		return nil, fmt.Errorf("dial %q: unsupported network %q", netwrk, netwrk)
 	}
 
-	var proxyUrl = os.Getenv("RIEMANN_PROXY")
-
-	// Get a proxy Dialer that will create the connection on our
-	// behalf via the SOCKS5 proxy.  Specify the authentication
-	// and re-create the dialer/transport/client if tor's
-	// IsolateSOCKSAuth is needed.
-	var dialer proxy.Dialer
-	if dialer == nil {
-		dialer = proxy.Direct
-	}
-
-	if proxyUrl != "" {
-		u, err := url.Parse(proxyUrl)
-		if err != nil {
-			fmt.Errorf("Failed to obtain proxy dialer: %v\n", err)
-		}
-		if dialer, err = proxy.FromURL(u, dialer); err != nil {
-			fmt.Errorf("Failed to parse  " + proxyUrl + " as a proxy: " + err.Error())
-			return nil, err
-		}
+	dialer, err := newDialer()
+	if err != nil {
+		return nil, err
 	}
 
 	c.net = cnet
@@ -95,6 +78,28 @@ func DialWithTimeout(netwrk, addr string, timeout time.Duration) (c *Client, err
 	}
 
 	return c, nil
+}
+
+func newDialer() (proxy.Dialer, error) {
+	var proxyUrl = os.Getenv("RIEMANN_PROXY")
+	var dialer proxy.Dialer = proxy.Direct
+
+	// Get a proxy Dialer that will create the connection on our
+	// behalf via the SOCKS5 proxy.  Specify the authentication
+	// and re-create the dialer/transport/client if tor's
+	// IsolateSOCKSAuth is needed.
+	if len(proxyUrl) > 0 {
+		u, err := url.Parse(proxyUrl)
+		if err != nil {
+			fmt.Errorf("failed to obtain proxy dialer: %v\n", err)
+		}
+		if dialer, err = proxy.FromURL(u, dialer); err != nil {
+			fmt.Errorf("failed to parse  " + proxyUrl + " as a proxy: " + err.Error())
+			return nil, err
+		}
+	}
+
+	return dialer, nil
 }
 
 // Dial establishes a connection to a Riemann server at addr, on the network
