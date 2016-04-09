@@ -37,15 +37,15 @@ type Client struct {
 
 // An Event represents a single Riemann event
 type Event struct {
-	Ttl         float32
-	Time        int64
-	Tags        []string
-	Host        string // Defaults to os.Hostname()
-	State       string
-	Service     string
-	Metric      interface{} // Could be Int, Float32, Float64
-	Description string
-	Attributes  map[string]string
+	Ttl         float32           `json:"ttl,omitempty"`
+	Time        int64             `json:"time,omitempty"`
+	Tags        []string          `json:"tags,omitempty"`
+	Host        string            `json:"host,omitempty"` // Defaults to os.Hostname()
+	State       string            `json:"state,omitempty"`
+	Service     string            `json:"service,omitempty"`
+	Metric      interface{}       `json:"metric,omitempty"` // Could be Int, Float32, Float64
+	Description string            `json:"description,omitempty"`
+	Attributes  map[string]string `json:"attributes,omitempty"`
 }
 
 // Dial establishes a connection to a Riemann server at addr, on the network
