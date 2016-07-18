@@ -91,11 +91,10 @@ func newDialer() (proxy.Dialer, error) {
 	if len(proxyUrl) > 0 {
 		u, err := url.Parse(proxyUrl)
 		if err != nil {
-			fmt.Errorf("failed to obtain proxy dialer: %v\n", err)
+			return nil, fmt.Errorf("failed to obtain proxy dialer: %v\n", err)
 		}
 		if dialer, err = proxy.FromURL(u, dialer); err != nil {
-			fmt.Errorf("failed to parse  " + proxyUrl + " as a proxy: " + err.Error())
-			return nil, err
+			return nil, fmt.Errorf("failed to parse  " + proxyUrl + " as a proxy: " + err.Error())
 		}
 	}
 
