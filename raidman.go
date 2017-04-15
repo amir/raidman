@@ -334,8 +334,8 @@ func (c *Client) Query(q string) ([]Event, error) {
 }
 
 // Close closes the connection to Riemann
-func (c *Client) Close() {
+func (c *Client) Close() error {
 	c.Lock()
-	c.connection.Close()
-	c.Unlock()
+	defer c.Unlock()
+	return c.connection.Close()
 }
